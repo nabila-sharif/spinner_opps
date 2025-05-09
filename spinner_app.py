@@ -6,7 +6,7 @@ from matplotlib.patches import Wedge
 
 # Base Class (Spinner)
 class Spinner:
-    def _init_(self, segments, radius, center):
+    def __init__(self, segments, radius, center):
         self.angle = 0
         self.selected_index = None
         self.center = center
@@ -21,8 +21,8 @@ class Spinner:
 
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
-    def _init_(self):
-        super()._init_(segments=6, radius=140, center=(200, 200))
+    def __init__(self, segments=6):
+        super().__init__(segments=segments, radius=140, center=(200, 200))
         self.base_colors = ["#b3e5fc", "#81d4fa", "#4fc3f7", "#29b6f6", "#03a9f4", "#039be5"]
         self.speed = 0
 
@@ -43,13 +43,14 @@ class WheelSpinner(Spinner):
             y = self.center[1] + (self.radius / 1.7) * math.sin(mid_angle)
             ax.text(x, y, str(i + 1), ha='center', va='center', fontweight='bold', fontsize=16, color="black")
 
-        # Pointer
-        ax.plot([200, 200], [20, 40], color="orange", lw=3)
-        ax.plot([200, 190], [40, 30], color="orange", lw=3)
-        ax.plot([200, 210], [40, 30], color="orange", lw=3)
+        # Pointer (dynamic based on center and radius)
+        cx, cy = self.center
+        ax.plot([cx, cx], [cy - self.radius - 20, cy - self.radius], color="orange", lw=3)
+        ax.plot([cx, cx - 10], [cy - self.radius, cy - self.radius + 10], color="orange", lw=3)
+        ax.plot([cx, cx + 10], [cy - self.radius, cy - self.radius + 10], color="orange", lw=3)
 
         if selected is not None:
-            ax.text(200, 200, str(selected + 1), ha='center', va='center', fontweight='bold', fontsize=40, color="red")
+            ax.text(cx, cy, str(selected + 1), ha='center', va='center', fontweight='bold', fontsize=40, color="red")
 
         ax.set_aspect('equal')
         ax.set_xlim(0, 400)
@@ -74,11 +75,14 @@ class WheelSpinner(Spinner):
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
 st.title("🎡 Wheel Spinner")
 
-# Session init
+# User config
+segments = st.slider("Select number of segments:", 2, 12, 6)
+
+# Session state initialization
 if 'running' not in st.session_state:
     st.session_state.running = False
-if 'wheel' not in st.session_state:
-    st.session_state.wheel = WheelSpinner()
+if 'wheel' not in st.session_state or st.session_state.wheel.segments != segments:
+    st.session_state.wheel = WheelSpinner(segments=segments)
 if 'placeholder' not in st.session_state:
     st.session_state.placeholder = st.empty()
 
