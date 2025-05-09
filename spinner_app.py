@@ -6,7 +6,7 @@ from matplotlib.patches import Wedge
 
 # Base Class (Spinner)
 class Spinner:
-    def __init__(self, segments, radius, center):
+    def _init_(self, segments, radius, center):
         self.angle = 0
         self.running = False
         self.selected_index = None
@@ -26,9 +26,8 @@ class Spinner:
 
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
-    def __init__(self):
-        # Inherit properties from base class
-        super().__init__(segments=6, radius=140, center=(200, 200))
+    def _init_(self):
+        super()._init_(segments=6, radius=140, center=(200, 200))
         self.base_colors = ["#b3e5fc", "#81d4fa", "#4fc3f7", "#29b6f6", "#03a9f4", "#039be5"]
 
     def draw(self, placeholder):
@@ -36,16 +35,13 @@ class WheelSpinner(Spinner):
         angle = self.angle
         selected = self.selected_index
 
-        # Draw the wheel segments
         for i in range(self.segments):
             start_angle = (360 / self.segments) * i + angle
             extent = 360 / self.segments
-            # Highlight the selected segment in yellow
             color = "yellow" if selected is not None and i == selected else self.base_colors[i % len(self.base_colors)]
             wedge = Wedge(self.center, self.radius, start_angle, start_angle + extent, color=color, ec="white", lw=2)
             ax.add_patch(wedge)
 
-            # Number label
             mid_angle = math.radians(start_angle + extent / 2)
             x = self.center[0] + (self.radius / 1.7) * math.cos(mid_angle)
             y = self.center[1] + (self.radius / 1.7) * math.sin(mid_angle)
@@ -56,7 +52,6 @@ class WheelSpinner(Spinner):
         ax.plot([200, 190], [40, 30], color="orange", lw=3)
         ax.plot([200, 210], [40, 30], color="orange", lw=3)
 
-        # Selected number in center
         if selected is not None:
             ax.text(200, 200, str(selected + 1), ha='center', va='center', fontweight='bold', fontsize=40, color="red")
 
@@ -72,17 +67,15 @@ class WheelSpinner(Spinner):
             self.selected_index = None
             speed = 15
             deceleration = 0.1
-            max_spin_time = 5  # Spin for 5 seconds
+            max_spin_time = 5
             start_time = time.time()
 
-            # Start spinning loop
-            while st.session_state.running and (time.time() - start_time < max_spin_time):  # Check the running state inside the loop
+            while st.session_state.running and (time.time() - start_time < max_spin_time):
                 self.angle = (self.angle + speed) % 360
                 self.draw(placeholder)
                 time.sleep(0.05)
                 speed = max(1, speed - deceleration)
 
-            # After the loop ends, select the final segment
             final_angle = (360 - self.angle) % 360
             segment_angle = 360 / self.segments
             self.selected_index = int(final_angle // segment_angle)
@@ -90,18 +83,16 @@ class WheelSpinner(Spinner):
             self.draw(placeholder)
             st.success(f"🎯 Selected Number: {selected_number}")
 
-            # Stop the spinning after 5 seconds
             self.stop()
 
     def stop(self):
-        st.session_state.running = False  # This will stop the spinning loop
+        st.session_state.running = False
 
 
 # Streamlit page config
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
 st.title("🎡 Wheel Spinner with CSS Spinner")
 
-# Initialize session state if it doesn't exist
 if 'running' not in st.session_state:
     st.session_state.running = False
 
@@ -152,7 +143,7 @@ st.markdown("""
 wheel = WheelSpinner()
 placeholder = st.empty()
 
-# Buttons in columns
+# Buttons
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Start") and not st.session_state.running:
@@ -162,13 +153,15 @@ with col2:
     if st.button("Stop") and st.session_state.running:
         wheel.stop()
 
-# HTML spinner in the page
-st.markdown("""
-<div class="spinner-container">
-    <div class="spinner"></div>
-</div>
-<p style="text-align:center; font-size:20px;">Spinning...🎯</p>
-""", unsafe_allow_html=True)
+# Show HTML spinner only while running
+if st.session_state.running:
+    st.markdown("""
+    <div class="spinner-container">
+        <div class="spinner"></div>
+    </div>
+    <p style="text-align:center; font-size:20px;">Spinning...🎯</p>
+    """, unsafe_allow_html=True)
 
-# Initial render of the wheel
-wheel.draw(placeholder)
+# Initial draw
+if not st.session_state.running:
+    wheel.draw(placeholder)
