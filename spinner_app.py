@@ -22,23 +22,19 @@ class WheelSpinner:
         for i in range(self.segments):
             start_angle = (360 / self.segments) * i + angle
             extent = 360 / self.segments
-            # Highlight the selected segment in yellow
             color = "yellow" if selected is not None and i == selected else self.base_colors[i % len(self.base_colors)]
             wedge = Wedge(self.center, self.radius, start_angle, start_angle + extent, color=color, ec="white", lw=2)
             ax.add_patch(wedge)
 
-            # Number label
             mid_angle = math.radians(start_angle + extent / 2)
             x = self.center[0] + (self.radius / 1.7) * math.cos(mid_angle)
             y = self.center[1] + (self.radius / 1.7) * math.sin(mid_angle)
             ax.text(x, y, str(i + 1), ha='center', va='center', fontweight='bold', fontsize=16, color="black")
 
-        # Pointer
         ax.plot([200, 200], [20, 40], color="orange", lw=3)
         ax.plot([200, 190], [40, 30], color="orange", lw=3)
         ax.plot([200, 210], [40, 30], color="orange", lw=3)
 
-        # Selected number in center
         if selected is not None:
             ax.text(200, 200, str(selected + 1), ha='center', va='center', fontweight='bold', fontsize=40, color="red")
 
@@ -48,38 +44,42 @@ class WheelSpinner:
         ax.axis('off')
         placeholder.pyplot(fig)
 
-    def start_spin(self, placeholder):
+    def spin(self, placeholder):
         if not self.running:
             self.running = True
-            self.selected_index = None
-            speed = 15
-            deceleration = 0.1
-            max_spin_time = 5
-            start_time = time.time()
+        speed = 15
+        deceleration = 0.05
 
-            while self.running and (time.time() - start_time < max_spin_time):
-                self.angle = (self.angle + speed) % 360
-                self.draw_wheel(placeholder)
-                time.sleep(0.05)
-                speed = max(1, speed - deceleration)
-
-            self.running = False
-            final_angle = (360 - self.angle) % 360
-            segment_angle = 360 / self.segments
-            self.selected_index = int(final_angle // segment_angle)
-            selected_number = self.selected_index + 1
+        while self.running and speed > 0:
+            self.angle = (self.angle + speed) % 360
             self.draw_wheel(placeholder)
-            st.success(f"🎯 Selected Number: {selected_number}")
+            time.sleep(0.05)
+            speed = max(0, speed - deceleration)
 
-    def stop_spin(self):
+        if not self.running:
+            return  # stopped manually, result handled in stop_spin()
+
         self.running = False
+        self.show_result(placeholder)
+
+    def stop_spin(self, placeholder):
+        self.running = False
+        self.show_result(placeholder)
+
+    def show_result(self, placeholder):
+        final_angle = (360 - self.angle) % 360
+        segment_angle = 360 / self.segments
+        self.selected_index = int(final_angle // segment_angle)
+        selected_number = self.selected_index + 1
+        self.draw_wheel(placeholder)
+        st.success(f"🎯 Selected Number: {selected_number}")
 
 
-# Streamlit UI
+# Page setup
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
-st.title("🎡 Wheel Spinner")
+st.title("🎡 Manual Stop Wheel Spinner")
 
-# CSS for button colors
+# Button styling
 st.markdown("""
     <style>
     div.stButton > button:first-child {
@@ -101,18 +101,25 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Instantiate wheel
-wheel = WheelSpinner()
+# Session state for spinner instance and control
+if "spinner" not in st.session_state:
+    st.session_state.spinner = WheelSpinner()
+
+wheel = st.session_state.spinner
 placeholder = st.empty()
 
 # Buttons
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Start"):
-        wheel.start_spin(placeholder)
+        wheel.selected_index = None
+        wheel.running = True
+        wheel.spin(placeholder)
+
 with col2:
     if st.button("Stop"):
-        wheel.stop_spin()
+        wheel.stop_spin(placeholder)
 
-# Initial render
-wheel.draw_wheel(placeholder)
+# Always draw latest state
+if not wheel.running:
+    wheel.draw_wheel(placeholder)
