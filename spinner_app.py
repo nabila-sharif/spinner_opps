@@ -4,9 +4,9 @@ import time
 import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Wedge
-from abc import ABC, abstractmethod  # Abstract Base Class support
+from abc import ABC, abstractmethod
 
-# Abstract Base Class (Spinner)
+# Abstract Base Class
 class Spinner(ABC):
     def __init__(self, segments, radius, center):
         self.angle = 0
@@ -27,7 +27,7 @@ class Spinner(ABC):
     def stop(self, placeholder):
         pass
 
-# Derived Class (WheelSpinner)
+# Wheel Spinner
 class WheelSpinner(Spinner):
     def __init__(self):
         super().__init__(segments=6, radius=140, center=(200, 200))
@@ -78,9 +78,10 @@ class WheelSpinner(Spinner):
     def stop(self, placeholder):
         st.session_state.running = False
 
-        # Finalize selection
-        random_offset = random.uniform(0, 360 / self.segments)
-        final_angle = (360 - self.angle + random_offset) % 360
+        # Randomly stop at any angle
+        final_angle = random.uniform(0, 360)
+        self.angle = (360 - final_angle) % 360
+
         segment_angle = 360 / self.segments
         self.selected_index = int(final_angle // segment_angle)
         selected_number = self.selected_index + 1
@@ -88,16 +89,17 @@ class WheelSpinner(Spinner):
         self.draw(placeholder)
         st.success(f"🎯 Selected Number: {selected_number}")
 
-# Streamlit UI
+# Streamlit setup
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
-st.title("🎡 Manual Wheel Spinner with Abstract Class")
+st.title("🎡 Randomized Wheel Spinner (OOP + Abstract Class)")
 
+# Session state
 if 'running' not in st.session_state:
     st.session_state.running = False
 if 'speed' not in st.session_state:
     st.session_state.speed = 15
 
-# CSS
+# Custom CSS
 st.markdown("""
     <style>
     .spinner-container {
@@ -137,7 +139,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Use the class
+# Spinner logic
 wheel = WheelSpinner()
 placeholder = st.empty()
 
