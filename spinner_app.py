@@ -1,6 +1,7 @@
 import streamlit as st
 import math
 import time
+import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Wedge
 
@@ -22,7 +23,6 @@ class Spinner:
 
     def stop(self):
         pass
-
 
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
@@ -76,7 +76,9 @@ class WheelSpinner(Spinner):
                 time.sleep(0.05)
                 speed = max(1, speed - deceleration)
 
-            final_angle = (360 - self.angle) % 360
+            # Introduce randomness to the final angle
+            random_offset = random.uniform(0, 360 / self.segments)
+            final_angle = (360 - self.angle + random_offset) % 360
             segment_angle = 360 / self.segments
             self.selected_index = int(final_angle // segment_angle)
             selected_number = self.selected_index + 1
@@ -87,7 +89,6 @@ class WheelSpinner(Spinner):
 
     def stop(self):
         st.session_state.running = False
-
 
 # Streamlit page config
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
