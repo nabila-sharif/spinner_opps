@@ -6,7 +6,7 @@ from matplotlib.patches import Wedge
 
 # Base Class (Spinner)
 class Spinner:
-    def __init__(self, segments, radius, center):
+    def _init_(self, segments, radius, center):
         self.angle = 0
         self.running = False
         self.selected_index = None
@@ -25,8 +25,8 @@ class Spinner:
 
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
-    def __init__(self):
-        super().__init__(segments=6, radius=140, center=(200, 200))
+    def _init_(self):
+        super()._init_(segments=6, radius=140, center=(200, 200))
         self.base_colors = ["#b3e5fc", "#81d4fa", "#4fc3f7", "#29b6f6", "#03a9f4", "#039be5"]
 
     def draw(self, placeholder):
