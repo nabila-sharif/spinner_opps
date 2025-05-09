@@ -4,24 +4,27 @@ import time
 import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Wedge
+from abc import ABC, abstractmethod  # Abstract Base Class support
 
-# Base Class (Spinner)
-class Spinner:
+# Abstract Base Class (Spinner)
+class Spinner(ABC):
     def __init__(self, segments, radius, center):
         self.angle = 0
-        self.running = False
         self.selected_index = None
         self.center = center
         self.radius = radius
         self.segments = segments
 
+    @abstractmethod
     def draw(self, placeholder):
         pass
 
+    @abstractmethod
     def start(self, placeholder):
         pass
 
-    def stop(self):
+    @abstractmethod
+    def stop(self, placeholder):
         pass
 
 # Derived Class (WheelSpinner)
@@ -47,7 +50,6 @@ class WheelSpinner(Spinner):
             y = self.center[1] + (self.radius / 1.7) * math.sin(mid_angle)
             ax.text(x, y, str(i + 1), ha='center', va='center', fontweight='bold', fontsize=16, color="black")
 
-        # Pointer
         ax.plot([200, 200], [20, 40], color="orange", lw=3)
         ax.plot([200, 190], [40, 30], color="orange", lw=3)
         ax.plot([200, 210], [40, 30], color="orange", lw=3)
@@ -65,39 +67,37 @@ class WheelSpinner(Spinner):
         if not st.session_state.running:
             st.session_state.running = True
             self.selected_index = None
-            speed = 15
-            deceleration = 0.1
-            max_spin_time = 5
-            start_time = time.time()
+            st.session_state.speed = 15
 
-            while st.session_state.running and (time.time() - start_time < max_spin_time):
-                self.angle = (self.angle + speed) % 360
-                self.draw(placeholder)
-                time.sleep(0.05)
-                speed = max(1, speed - deceleration)
-
-            # Introduce randomness to the final angle
-            random_offset = random.uniform(0, 360 / self.segments)
-            final_angle = (360 - self.angle + random_offset) % 360
-            segment_angle = 360 / self.segments
-            self.selected_index = int(final_angle // segment_angle)
-            selected_number = self.selected_index + 1
+        while st.session_state.running:
+            self.angle = (self.angle + st.session_state.speed) % 360
             self.draw(placeholder)
-            st.success(f"🎯 Selected Number: {selected_number}")
+            time.sleep(0.05)
+            st.session_state.speed = max(1, st.session_state.speed - 0.1)
 
-            self.stop()
-
-    def stop(self):
+    def stop(self, placeholder):
         st.session_state.running = False
 
-# Streamlit page config
+        # Finalize selection
+        random_offset = random.uniform(0, 360 / self.segments)
+        final_angle = (360 - self.angle + random_offset) % 360
+        segment_angle = 360 / self.segments
+        self.selected_index = int(final_angle // segment_angle)
+        selected_number = self.selected_index + 1
+
+        self.draw(placeholder)
+        st.success(f"🎯 Selected Number: {selected_number}")
+
+# Streamlit UI
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
-st.title("🎡 Wheel Spinner with CSS Spinner")
+st.title("🎡 Manual Wheel Spinner with Abstract Class")
 
 if 'running' not in st.session_state:
     st.session_state.running = False
+if 'speed' not in st.session_state:
+    st.session_state.speed = 15
 
-# Inject CSS for spinner and buttons
+# CSS
 st.markdown("""
     <style>
     .spinner-container {
@@ -106,7 +106,6 @@ st.markdown("""
         align-items: center;
         height: 300px;
     }
-
     .spinner {
         border: 16px solid #f3f3f3;
         border-top: 16px solid #3498db;
@@ -115,12 +114,10 @@ st.markdown("""
         height: 120px;
         animation: spin 2s linear infinite;
     }
-
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
     div.stButton > button:first-child {
         background-color: #4CAF50;
         color: white;
@@ -140,11 +137,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Instantiate wheel
+# Use the class
 wheel = WheelSpinner()
 placeholder = st.empty()
 
-# Buttons
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Start") and not st.session_state.running:
@@ -152,9 +148,8 @@ with col1:
 
 with col2:
     if st.button("Stop") and st.session_state.running:
-        wheel.stop()
+        wheel.stop(placeholder)
 
-# Show HTML spinner only while running
 if st.session_state.running:
     st.markdown("""
     <div class="spinner-container">
@@ -163,6 +158,5 @@ if st.session_state.running:
     <p style="text-align:center; font-size:20px;">Spinning...🎯</p>
     """, unsafe_allow_html=True)
 
-# Initial draw
 if not st.session_state.running:
     wheel.draw(placeholder)
