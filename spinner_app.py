@@ -1,3 +1,4 @@
+
 import streamlit as st
 import math
 import time
@@ -22,6 +23,7 @@ class Spinner:
 
     def stop(self):
         pass
+
 
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
@@ -81,10 +83,12 @@ class WheelSpinner(Spinner):
             selected_number = self.selected_index + 1
             self.draw(placeholder)
             st.success(f"🎯 Selected Number: {selected_number}")
+
             self.stop()
 
     def stop(self):
         st.session_state.running = False
+
 
 # Streamlit page config
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
