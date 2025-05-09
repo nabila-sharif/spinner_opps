@@ -6,7 +6,7 @@ from matplotlib.patches import Wedge
 
 # Base Class (Spinner)
 class Spinner:
-    def _init_(self, segments, radius, center):
+    def __init__(self, segments, radius, center):
         self.angle = 0
         self.running = False
         self.selected_index = None
@@ -23,11 +23,10 @@ class Spinner:
     def stop(self):
         pass
 
-
 # Derived Class (WheelSpinner)
 class WheelSpinner(Spinner):
-    def _init_(self):
-        super()._init_(segments=6, radius=140, center=(200, 200))
+    def __init__(self):
+        super().__init__(segments=6, radius=140, center=(200, 200))
         self.base_colors = ["#b3e5fc", "#81d4fa", "#4fc3f7", "#29b6f6", "#03a9f4", "#039be5"]
 
     def draw(self, placeholder):
@@ -82,12 +81,10 @@ class WheelSpinner(Spinner):
             selected_number = self.selected_index + 1
             self.draw(placeholder)
             st.success(f"🎯 Selected Number: {selected_number}")
-
             self.stop()
 
     def stop(self):
         st.session_state.running = False
-
 
 # Streamlit page config
 st.set_page_config(page_title="Wheel Spinner", layout="centered")
